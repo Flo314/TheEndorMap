@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
@@ -24,6 +26,7 @@ private const val REQUEST_CHECK_SETTINGS = 1
 // s'abonner au livedata et en fonction de ce quelle reçoit une position ou une erreur elle fait le traitement qu'il faut
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
+    private lateinit var viewModel: MapViewModel
     private lateinit var map: GoogleMap
     private lateinit var locationLiveData: LocationLiveData
 
@@ -47,6 +50,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         locationLiveData = LocationLiveData(this)
         locationLiveData.observe(this, Observer { handleLocationData(it!!) })
+
+        // donne un viewModel on ne s'occupe pas de son cycle de vie
+        viewModel = ViewModelProviders.of(this).get(MapViewModel::class.java)
     }
 
     /* appel au retour de l'activity crée ->
