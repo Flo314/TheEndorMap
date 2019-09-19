@@ -7,38 +7,26 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import timber.log.Timber
 
 // requestcode -> jeton qui rapelle
-private const val REQUEST_PERMISSION_LOCATION_LAST_LOCATION = 1
 private const val REQUEST_PERMISSION_LOCATION_START_UPDATE = 2
 private const val REQUEST_CHECK_SETTINGS = 1
 
+// s'abonner au livedata et en fonction de ce quelle reçoit une position ou une erreur elle fait le traitement qu'il faut
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    // récupère l'ensemble des locations
-    private val locationCallback = object: LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult?) {
-            // elvis opérator = (?:) sert à voir si c'est null remplace un if == null
-            locationResult ?: return
-            for (location in locationResult.locations) {
-                Timber.d("location update $location")
-            }
-        }
-    }
+    private lateinit var locationLiveData: LocationLiveData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // récupération d'un client de location qui est fused qui va requêter le wifi, le gps et renvoyer une location
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        updateLastLocation()
-        createLocationRequest()
+        locationLiveData = LocationLiveData(this)
+        locationLiveData.observe(this, Observer { handleLocationData(it!!) })
     }
 
     /* appel au retour de l'activity crée ->
@@ -47,63 +35,28 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
-            REQUEST_CHECK_SETTINGS -> startLocationUpdate()
+            REQUEST_CHECK_SETTINGS -> locationLiveData.startRequestLocation()
         }
     }
 
-    private fun updateLastLocation() {
-        Timber.d("updateLocation()")
-        // vérifier si on a la permission pour vérifier la location
-        if (!checkLocationPermission(REQUEST_PERMISSION_LOCATION_LAST_LOCATION)) {
-            return
-        }
-        // dernière position gps
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            Timber.i("Last Location $location")
-        }
-    }
-
-    // crée une requête pour récupérer la geolocalisation du gps
-    private fun createLocationRequest() {
-        // crée la location request
-        locationRequest = LocationRequest.create().apply {
-            // interval du rafraichissement toutes les 10s
-            interval = 10000
-            fastestInterval = 5000
-            // précision de geolocalisation
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-        // vérifier que l'option de location est activé sur les paramètres du device
-        val builder = LocationSettingsRequest.Builder()
-            .addLocationRequest(locationRequest)
-        val client = LocationServices.getSettingsClient(this)
-
-        val task = client.checkLocationSettings(builder.build())
-        task.addOnSuccessListener { locationSettingsResponse ->  
-            Timber.i("Location settings satisfied. Init location request here")
-            // récupérer la position courante
-            startLocationUpdate()
-        }
-
-        // cas d'erreur
-        task.addOnFailureListener { exception ->
-            Timber.e(exception, "Failed to modify Location settings.")
-            if (exception is ResolvableApiException) {
-                exception.startResolutionForResult(this, REQUEST_CHECK_SETTINGS)
-            }
-        }
-    }
-
-    // récupération de la geolocalisation
-    private fun startLocationUpdate() {
-        Timber.i("startLocationUpdate()")
-        // vérif si on a la permission
-        if (!checkLocationPermission(REQUEST_PERMISSION_LOCATION_START_UPDATE)) {
+    private fun handleLocationData(locationData: LocationData) {
+        if (handleLocationException(locationData.exception)) {
             return
         }
 
-        // requête récurrente sur la geolocalisation
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        Timber.i("Last location from LIVEDATA ${locationData.location}")
+    }
+
+    // exception remonté par requestLocation de live data
+    private fun handleLocationException(exception: Exception?): Boolean {
+        exception ?: return false
+
+        Timber.e(exception, "handleLocationException")
+        when (exception) {
+            is SecurityException -> checkLocationPermission((REQUEST_PERMISSION_LOCATION_START_UPDATE))
+            is ResolvableApiException -> exception.startResolutionForResult(this, REQUEST_CHECK_SETTINGS)
+        }
+        return true
     }
 
     // vérifie si on a la permission
@@ -129,8 +82,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         when (requestCode) {
-            REQUEST_PERMISSION_LOCATION_LAST_LOCATION -> updateLastLocation()
-            REQUEST_PERMISSION_LOCATION_START_UPDATE -> startLocationUpdate()
+            REQUEST_PERMISSION_LOCATION_START_UPDATE -> locationLiveData.startRequestLocation()
         }
     }
 }
