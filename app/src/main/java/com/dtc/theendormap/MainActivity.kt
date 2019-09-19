@@ -10,6 +10,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMapOptions
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import timber.log.Timber
 
 // requestcode -> jeton qui rapelle
@@ -17,13 +21,28 @@ private const val REQUEST_PERMISSION_LOCATION_START_UPDATE = 2
 private const val REQUEST_CHECK_SETTINGS = 1
 
 // s'abonner au livedata et en fonction de ce quelle reçoit une position ou une erreur elle fait le traitement qu'il faut
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
+    private lateinit var map: GoogleMap
     private lateinit var locationLiveData: LocationLiveData
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // options de la carte
+        val mapOptions = GoogleMapOptions()
+            .mapType(GoogleMap.MAP_TYPE_NORMAL)
+            .zoomControlsEnabled(true)
+            .zoomGesturesEnabled(true)
+
+        // instancié un fragment pour l'ajouter à l'activité et remplir le framelayout d'activity.main.xml
+        val mapFragment = SupportMapFragment.newInstance(mapOptions)
+        // s'abonner aux event de google maps
+        mapFragment.getMapAsync(this)
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.content, mapFragment)
+            .commit()
 
         locationLiveData = LocationLiveData(this)
         locationLiveData.observe(this, Observer { handleLocationData(it!!) })
@@ -39,12 +58,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onMapReady(googleMap: GoogleMap) {
+        map = googleMap
+    }
+
     private fun handleLocationData(locationData: LocationData) {
         if (handleLocationException(locationData.exception)) {
             return
         }
 
-        Timber.i("Last location from LIVEDATA ${locationData.location}")
+//        Timber.i("Last location from LIVEDATA ${locationData.location}")
     }
 
     // exception remonté par requestLocation de live data
