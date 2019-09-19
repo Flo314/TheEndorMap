@@ -53,6 +53,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // donne un viewModel on ne s'occupe pas de son cycle de vie
         viewModel = ViewModelProviders.of(this).get(MapViewModel::class.java)
+        // s'abonner
+        viewModel.getUiState().observe(this, Observer { updateUiState(it!!) })
+    }
+
+    private fun updateUiState(state: MapUiState) {
+        // quand on fait un return de when on peut générer tous les states
+        return when (state) {
+            MapUiState.Loading -> {}
+            is MapUiState.Error -> {}
+            is MapUiState.PoiReady -> {}
+        }
     }
 
     /* appel au retour de l'activity crée ->
