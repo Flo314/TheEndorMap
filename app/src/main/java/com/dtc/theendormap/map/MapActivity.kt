@@ -110,21 +110,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         ))
     }
 
+    // reception de la position
     private fun handleLocationData(locationData: LocationData) {
         if (handleLocationException(locationData.exception)) {
             return
         }
         // ce bloc sera exécuté que si une location est définit
         locationData.location?.let {
+            // déplacer la caméra pour la mettre aux positions reçus
+            val latLng = LatLng(it.latitude, it.longitude)
             // on rentre dans ce bloc (&& :: que si la map n'a pas été initialisée)
             if (firstLocation && ::map.isInitialized) {
-                // déplacer la caméra pour la mettre aux positions reçus
-                val latLng = LatLng(it.latitude, it.longitude)
 
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 9f))
 
                 firstLocation = false
                 viewModel.loadPois(it.latitude, it.longitude)
+            }
+
+            if (::userMarker.isInitialized) {
+                userMarker.position = latLng
             }
         }
 //        Timber.i("Last location from LIVEDATA ${locationData.location}")
