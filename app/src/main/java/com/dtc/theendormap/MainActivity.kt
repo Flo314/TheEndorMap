@@ -30,6 +30,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private lateinit var locationLiveData: LocationLiveData
 
+    private var firstLocation = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -58,6 +60,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun updateUiState(state: MapUiState) {
+        // logger le state à chaque fois qu'il arrive
+        Timber.i("$state")
         // quand on fait un return de when on peut générer tous les states
         return when (state) {
             MapUiState.Loading -> {}
@@ -86,7 +90,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         if (handleLocationException(locationData.exception)) {
             return
         }
-
+        // ce bloc sera exécuté que si une location est définit
+        locationData.location?.let {
+            if (firstLocation) {
+                firstLocation = false
+                viewModel.loadPois(it.latitude, it.longitude)
+            }
+        }
 //        Timber.i("Last location from LIVEDATA ${locationData.location}")
     }
 
