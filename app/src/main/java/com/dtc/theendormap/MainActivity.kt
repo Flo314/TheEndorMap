@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -17,6 +18,7 @@ import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.MapStyleOptions
+import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
 
 // requestcode -> jeton qui rapelle
@@ -64,9 +66,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Timber.i("$state")
         // quand on fait un return de when on peut générer tous les states
         return when (state) {
-            MapUiState.Loading -> {}
-            is MapUiState.Error -> {}
-            is MapUiState.PoiReady -> {}
+            MapUiState.Loading -> loadingProgressBar.show()
+            is MapUiState.Error -> {
+                loadingProgressBar.hide()
+                Toast.makeText(this, "Error: ${state.errorMessage}", Toast.LENGTH_SHORT).show()
+            }
+            is MapUiState.PoiReady -> {
+                loadingProgressBar.hide()
+
+                state.usePoi?.let {
+
+                }
+
+                state.pois?.let {
+
+                }
+                return
+            }
         }
     }
 
