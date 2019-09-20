@@ -101,13 +101,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    // fournit la variable googlemap
+    // fournit la variable googlemap (initialisation de la carte)
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         // configurer la carte et chargé le fichier raw qui contient le style de la map
-        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,
-            R.raw.maps_style
-        ))
+        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.maps_style))
+        map.setInfoWindowAdapter(EndorInfoWindowAdapter(this))
     }
 
     // reception de la position
