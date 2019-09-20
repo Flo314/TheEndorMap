@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -100,6 +102,32 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         when (requestCode) {
             REQUEST_CHECK_SETTINGS -> locationLiveData.startRequestLocation()
         }
+    }
+
+    // création du menu
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+         menuInflater.inflate(R.menu.activity_map_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item!!.itemId) {
+            R.id.generate_pois -> {
+                refreshPoisFromCurrentLocation()
+                true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+
+    }
+
+    // rafraîchit les poi de la map en fonction de la position du marker
+    private fun refreshPoisFromCurrentLocation() {
+        map.clear()
+        viewModel.loadPois(
+            userMarker.position.latitude,
+            userMarker.position.longitude
+        )
     }
 
     // fournit la variable googlemap (initialisation de la carte)
