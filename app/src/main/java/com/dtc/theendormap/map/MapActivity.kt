@@ -3,6 +3,7 @@ package com.dtc.theendormap.map
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,10 +14,10 @@ import androidx.lifecycle.ViewModelProviders
 import com.dtc.theendormap.R
 import com.dtc.theendormap.location.LocationData
 import com.dtc.theendormap.location.LocationLiveData
+import com.dtc.theendormap.poi.Poi
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.*
 import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
 
@@ -28,10 +29,11 @@ private const val REQUEST_CHECK_SETTINGS = 1
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var viewModel: MapViewModel
-    private lateinit var map: GoogleMap
     private lateinit var locationLiveData: LocationLiveData
 
+    private lateinit var map: GoogleMap
     private var firstLocation = true
+    private lateinit var userMarker: Marker
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,6 +62,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         viewModel.getUiState().observe(this, Observer { updateUiState(it!!) })
     }
 
+    // récupère les pois du viewmodel
     private fun updateUiState(state: MapUiState) {
         // logger le state à chaque fois qu'il arrive
         Timber.i("$state")
@@ -73,12 +76,15 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             is MapUiState.PoiReady -> {
                 loadingProgressBar.hide()
 
-                state.usePoi?.let {
-
+                state.usePoi?.let { poi ->
+                    // ajouter les marker associé
+                    userMarker = addPoiToMapMarker(poi, map)
                 }
 
-                state.pois?.let {
-
+                state.pois?.let { pois ->
+                    for (poi in pois) {
+                       addPoiToMapMarker(poi, map)
+                    }
                 }
                 return
             }
@@ -164,4 +170,32 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             REQUEST_PERMISSION_LOCATION_START_UPDATE -> locationLiveData.startRequestLocation()
         }
     }
+}
+
+// Ajoute un marker pour chaque Poi
+private fun addPoiToMapMarker(poi: Poi, map: GoogleMap) : Marker {
+    val options = MarkerOptions()
+        .position(LatLng(poi.latitude, poi.longitude))
+        .title(poi.title)
+        .snippet(poi.description)
+    // charge l'icon qui représentara le marker
+    if (poi.iconId > 0) {
+        // définie un icon
+        options.icon(BitmapDescriptorFactory.fromResource(poi.iconId))
+    } else if (poi.iconColor != 0) {
+        val hue = when (poi.iconColor) {
+            Color.BLUE -> BitmapDescriptorFactory.HUE_AZURE
+            Color.GREEN -> BitmapDescriptorFactory.HUE_GREEN
+            Color.YELLOW -> BitmapDescriptorFactory.HUE_YELLOW
+            Color.RED -> BitmapDescriptorFactory.HUE_RED
+            else -> BitmapDescriptorFactory.HUE_RED
+        }
+        options.icon(BitmapDescriptorFactory.defaultMarker(hue))
+    }
+
+    // création du marker
+    val marker = map.addMarker(options)
+    marker.tag = poi
+    return marker
+
 }
