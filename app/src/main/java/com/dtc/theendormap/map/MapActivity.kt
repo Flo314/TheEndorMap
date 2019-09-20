@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -107,6 +108,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         // configurer la carte et chargé le fichier raw qui contient le style de la map
         map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.maps_style))
         map.setInfoWindowAdapter(EndorInfoWindowAdapter(this))
+        
+        // ouvrir page web au clic d'une infowindow
+        map.setOnInfoWindowClickListener { showPoiDetail(it.tag as Poi) }
+    }
+
+    // ouvrir page web au clic d'une infowindow
+    private fun showPoiDetail(poi: Poi) {
+        if (poi.detailUrl.isEmpty()) {
+            return
+        }
+
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(poi.detailUrl))
+        startActivity(intent)
     }
 
     // reception de la position
