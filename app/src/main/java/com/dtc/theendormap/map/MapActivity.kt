@@ -14,10 +14,8 @@ import com.dtc.theendormap.R
 import com.dtc.theendormap.location.LocationData
 import com.dtc.theendormap.location.LocationLiveData
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMapOptions
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import timber.log.Timber
@@ -47,7 +45,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // instancié un fragment pour l'ajouter à l'activité et remplir le framelayout d'activity.main.xml
         val mapFragment = SupportMapFragment.newInstance(mapOptions)
-        // s'abonner aux event de google maps
+        // s'abonner aux event de google maps charge la carte en asynchrone
         mapFragment.getMapAsync(this)
         supportFragmentManager.beginTransaction()
             .replace(R.id.content, mapFragment)
@@ -97,6 +95,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    // fournit la variable googlemap
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         // configurer la carte et chargé le fichier raw qui contient le style de la map
@@ -111,7 +110,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         // ce bloc sera exécuté que si une location est définit
         locationData.location?.let {
-            if (firstLocation) {
+            // on rentre dans ce bloc (&& :: que si la map n'a pas été initialisée)
+            if (firstLocation && ::map.isInitialized) {
+                // déplacer la caméra pour la mettre aux positions reçus
+                val latLng = LatLng(it.latitude, it.longitude)
+
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 9f))
+
                 firstLocation = false
                 viewModel.loadPois(it.latitude, it.longitude)
             }
