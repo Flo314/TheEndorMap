@@ -1,15 +1,9 @@
-package com.dtc.theendormap
+package com.dtc.theendormap.location
 
 import android.content.Context
-import android.location.Location
 import androidx.lifecycle.LiveData
-import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import timber.log.Timber
-import java.lang.Exception
-
-data class LocationData(val location: Location? = null,
-                        val exception: Exception? = null)
 
 // je récupère la position je la remonte sinon je remonte l'erreur
 class LocationLiveData(context: Context) : LiveData<LocationData>() {

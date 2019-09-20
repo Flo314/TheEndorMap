@@ -1,4 +1,4 @@
-package com.dtc.theendormap
+package com.dtc.theendormap.map
 
 import android.Manifest
 import android.content.Intent
@@ -9,10 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import com.dtc.theendormap.R
+import com.dtc.theendormap.location.LocationData
+import com.dtc.theendormap.location.LocationLiveData
 import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMapOptions
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -26,7 +27,7 @@ private const val REQUEST_PERMISSION_LOCATION_START_UPDATE = 2
 private const val REQUEST_CHECK_SETTINGS = 1
 
 // s'abonner au livedata et en fonction de ce quelle reçoit une position ou une erreur elle fait le traitement qu'il faut
-class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var viewModel: MapViewModel
     private lateinit var map: GoogleMap
@@ -99,7 +100,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         // configurer la carte et chargé le fichier raw qui contient le style de la map
-        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.maps_style))
+        map.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,
+            R.raw.maps_style
+        ))
     }
 
     private fun handleLocationData(locationData: LocationData) {
@@ -123,7 +126,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         Timber.e(exception, "handleLocationException")
         when (exception) {
             is SecurityException -> checkLocationPermission((REQUEST_PERMISSION_LOCATION_START_UPDATE))
-            is ResolvableApiException -> exception.startResolutionForResult(this, REQUEST_CHECK_SETTINGS)
+            is ResolvableApiException -> exception.startResolutionForResult(this,
+                REQUEST_CHECK_SETTINGS
+            )
         }
         return true
     }

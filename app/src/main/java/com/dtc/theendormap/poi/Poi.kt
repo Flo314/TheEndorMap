@@ -1,4 +1,4 @@
-package com.dtc.theendormap
+package com.dtc.theendormap.poi
 
 /**
  * iconId et iconColor sont exclusif

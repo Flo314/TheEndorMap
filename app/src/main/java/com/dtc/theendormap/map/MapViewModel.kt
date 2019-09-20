@@ -1,8 +1,11 @@
-package com.dtc.theendormap
+package com.dtc.theendormap.map
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.dtc.theendormap.poi.Poi
+import com.dtc.theendormap.poi.generatePois
+import com.dtc.theendormap.poi.generateUserPoi
 import timber.log.Timber
 
 // décrit l'ensemble des états que le système pourra prendre
@@ -25,13 +28,14 @@ class MapViewModel : ViewModel() {
         Timber.i("loadPois()")
         // est ce que les coordonnées sont valides
         if (!(latitude in -90.0..90.0 && longitude in -180.0..180.0)) {
-            uiState.value = MapUiState.Error("Invalid coordinates: lat=$latitude, long=$longitude")
+            uiState.value =
+                MapUiState.Error("Invalid coordinates: lat=$latitude, long=$longitude")
             return
         }
 
         uiState.value = MapUiState.Loading
         uiState.value = MapUiState.PoiReady(
-            usePoi =  generateUserPoi(latitude, longitude),
+            usePoi = generateUserPoi(latitude, longitude),
             pois = generatePois(latitude, longitude)
         )
     }
