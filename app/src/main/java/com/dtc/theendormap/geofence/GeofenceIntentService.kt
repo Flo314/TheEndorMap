@@ -2,9 +2,15 @@ package com.dtc.theendormap.geofence
 
 import android.app.IntentService
 import android.content.Intent
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.dtc.theendormap.App
+import com.dtc.theendormap.R
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import timber.log.Timber
+
+private const val NOTIFICATION_ID_MORDOR = 0
 
 // un IntentService est une activity qui n'a pas d'UI et qui peut rester en vie plus longtemps qu'une activity
 class GeofenceIntentService : IntentService("EndorGeofenceIntentService") {
@@ -30,8 +36,29 @@ class GeofenceIntentService : IntentService("EndorGeofenceIntentService") {
 
         for (triggeringGeofence in geofencingEvent.triggeringGeofences) {
             if (triggeringGeofence.requestId == GEOFENCE_ID_MORDOR) {
-                Timber.w("ENTERING MORDOR")
+                sendMordorNotification(geofenceTransition)
             }
         }
+    }
+
+    private fun sendMordorNotification(transitionType: Int) {
+        // préparer le titre
+        val title: String
+
+        when (transitionType) {
+            Geofence.GEOFENCE_TRANSITION_ENTER -> {
+                title = "You entered the Mordor!"
+            }
+            else -> {
+                title = "You left the Mordor"
+            }
+        }
+
+        // construire la notifications
+        val builder = NotificationCompat.Builder(this, App.NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setAutoCancel(true)
+        NotificationManagerCompat.from(this).notify(NOTIFICATION_ID_MORDOR, builder.build())
     }
 }
