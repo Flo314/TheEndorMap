@@ -15,8 +15,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.dtc.theendormap.R
+import com.dtc.theendormap.geofence.GEOFENCE_ID_MORDOR
+import com.dtc.theendormap.geofence.GeofenceManager
 import com.dtc.theendormap.location.LocationData
 import com.dtc.theendormap.location.LocationLiveData
+import com.dtc.theendormap.poi.MOUNT_DOOM
 import com.dtc.theendormap.poi.Poi
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.maps.*
@@ -37,6 +40,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var map: GoogleMap
     private var firstLocation = true
     private lateinit var userMarker: Marker
+    private lateinit var geofenceManager: GeofenceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +59,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         supportFragmentManager.beginTransaction()
             .replace(R.id.content, mapFragment)
             .commit()
+
+        geofenceManager = GeofenceManager(this)
 
         locationLiveData = LocationLiveData(this)
         locationLiveData.observe(this, Observer { handleLocationData(it!!) })
@@ -83,10 +89,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     // ajouter les marker associé
                     userMarker = addPoiToMapMarker(poi, map)
                 }
-
+                // reception des poi qui ne sont pas l'utilisateur
                 state.pois?.let { pois ->
                     for (poi in pois) {
                        addPoiToMapMarker(poi, map)
+
+                        if (poi.title == MOUNT_DOOM) {
+                            geofenceManager.createGeofence(poi, 10000.0f, GEOFENCE_ID_MORDOR)
+                        }
                     }
                 }
                 return
@@ -123,6 +133,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     // rafraîchit les poi de la map en fonction de la position du marker
     private fun refreshPoisFromCurrentLocation() {
+        geofenceManager.removeAllGeofences()
         map.clear()
         viewModel.loadPois(
             userMarker.position.latitude,

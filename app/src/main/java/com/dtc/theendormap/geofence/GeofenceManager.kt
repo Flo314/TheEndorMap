@@ -9,7 +9,7 @@ import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
 import timber.log.Timber
 
-private const val GEOFENCE_ID_MORDOR = "Mordor"
+const val GEOFENCE_ID_MORDOR = "Mordor"
 
 // gère le geofencing
 class GeofenceManager(context: Context) {
@@ -46,6 +46,11 @@ class GeofenceManager(context: Context) {
         task.addOnFailureListener { exception ->
             Timber.e(exception, "Cannot add geofence")
         }
+    }
+
+    fun removeAllGeofences() {
+        geofencingClient.removeGeofences(geofencePendingIntent)
+        geofenceList.clear()
     }
 
     private fun getGeofencingRequest(): GeofencingRequest? {
