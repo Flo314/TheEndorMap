@@ -64,7 +64,7 @@ class GeofenceManager(context: Context) {
     // "by lazy" -> permet d'initialiser PendingIntent seulement à la première fois qu'on y fait référence (qu'on l'apelle)
     // qu'est ce qu'on souhaite déclancher au moment ou on entre et sort du geofencing
     private val geofencePendingIntent: PendingIntent by lazy {
-        val intent = Intent()
+        val intent = Intent(appContext, GeofenceIntentService::class.java)
         PendingIntent.getService(
             appContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
         )
