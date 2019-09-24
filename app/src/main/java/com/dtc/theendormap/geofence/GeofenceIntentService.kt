@@ -1,6 +1,7 @@
 package com.dtc.theendormap.geofence
 
 import android.app.IntentService
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -9,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.dtc.theendormap.App
 import com.dtc.theendormap.R
+import com.dtc.theendormap.map.MapActivity
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import timber.log.Timber
@@ -66,6 +68,12 @@ class GeofenceIntentService : IntentService("EndorGeofenceIntentService") {
         // convertir drawable en bitmap
         val bitmap = (drawable as BitmapDrawable).bitmap
 
+        // Action sur le clic de la notification
+        val intent = Intent(this, MapActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+
         // construire la notifications
         val builder = NotificationCompat.Builder(this, App.NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -75,6 +83,7 @@ class GeofenceIntentService : IntentService("EndorGeofenceIntentService") {
             .setStyle(NotificationCompat.BigPictureStyle()
                 .bigPicture(bitmap)
                 .bigLargeIcon(null))
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
         NotificationManagerCompat.from(this).notify(NOTIFICATION_ID_MORDOR, builder.build())
     }
